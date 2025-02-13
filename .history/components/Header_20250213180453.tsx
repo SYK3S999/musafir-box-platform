@@ -37,7 +37,7 @@ const getNavItems = (role: string | undefined) => {
     { name: "Agencies Bookings", path: "/client/bookings", icon: Calendar },
     
     { name: "Travel Alone", path: "/client/travel-alone", icon: Calendar },
-    { name: "Solo Bookings", path : "/client/travel-alone/bookings",icon: Calendar}
+    { name: "Travel Alone Bookings", path : "/client/travel-alone/bookings",icon: Calendar}
   ]
 
   const agencyItems = [

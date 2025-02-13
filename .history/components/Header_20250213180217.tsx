@@ -35,9 +35,10 @@ const getNavItems = (role: string | undefined) => {
 
   const clientItems = [
     { name: "Agencies Bookings", path: "/client/bookings", icon: Calendar },
-    
+
     { name: "Travel Alone", path: "/client/travel-alone", icon: Calendar },
-    { name: "Solo Bookings", path : "/client/travel-alone/bookings",icon: Calendar}
+    {name: "Travel Alone Bookings", path "/client/travel-alone/bookings"}
+    // { name: "Profile", path: "/client/profile", icon: User },
   ]
 
   const agencyItems = [
@@ -281,7 +282,9 @@ const Header = () => {
   )
 }
 
-const MobileNav = ({ navItems }: { navItems: { name: string; path: string; icon: any }[] }) => {
+import { LucideIcon } from "lucide-react";
+
+const MobileNav = ({ navItems }: { navItems: { name: string; path: string; icon: LucideIcon }[] }) => {
   return (
     <div className="min-h-screen bg-background pt-6 pb-20">
       <div className="px-6 pb-6 mb-6 border-b">

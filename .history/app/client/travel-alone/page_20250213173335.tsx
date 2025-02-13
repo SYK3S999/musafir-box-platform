@@ -417,7 +417,7 @@ export default function TravelAlonePage() {
   
       // Redirect to registrations page
       setTimeout(() => {
-        router.push("/client/travel-alone/bookings")
+        router.push("/travel-registrations")
       }, 1500)
     } catch (error) {
       toast({
