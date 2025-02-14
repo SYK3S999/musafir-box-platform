@@ -285,7 +285,7 @@ export default function TravelRegistrationsPage() {
                   : `No ${filter} plans found. Create a new plan or change filters.`}
               </p>
               <Button 
-                onClick={() => router.push("/client/travel-alone")}
+                onClick={() => router.push("/travel-alone")}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
                 size="lg"
               >

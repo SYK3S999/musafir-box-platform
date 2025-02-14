@@ -31,26 +31,39 @@ export function DatePickerWithRange({
   date,
   setDate,
 }: DatePickerWithRangeProps) {
-  // Use selected date start if available, else default to today.
+  // Initialize month to the currently selected date's start or today
   const [month, setMonth] = React.useState<Date>(date?.from || new Date())
   const [isOpen, setIsOpen] = React.useState(false)
 
+  // Define quick-select preset options
   const presets = [
     {
       name: "Today",
-      dates: { from: new Date(), to: new Date() },
+      dates: {
+        from: new Date(),
+        to: new Date(),
+      },
     },
     {
       name: "Yesterday",
-      dates: { from: addDays(new Date(), -1), to: addDays(new Date(), -1) },
+      dates: {
+        from: addDays(new Date(), -1),
+        to: addDays(new Date(), -1),
+      },
     },
     {
       name: "Last 7 days",
-      dates: { from: addDays(new Date(), -6), to: new Date() },
+      dates: {
+        from: addDays(new Date(), -6),
+        to: new Date(),
+      },
     },
     {
       name: "Last 30 days",
-      dates: { from: addDays(new Date(), -29), to: new Date() },
+      dates: {
+        from: addDays(new Date(), -29),
+        to: new Date(),
+      },
     },
     {
       name: "This month",
@@ -61,7 +74,7 @@ export function DatePickerWithRange({
     },
   ]
 
-  // Formats the selected date range for display.
+  // Format the display of the selected date range
   const formatDisplayDate = (date: DateRange | undefined) => {
     if (!date?.from) return "Select date range"
     if (!date.to) return format(date.from, "PPP")
@@ -71,7 +84,7 @@ export function DatePickerWithRange({
     return `${format(date.from, "MMM d")} - ${format(date.to, "MMM d, yyyy")}`
   }
 
-  // Update calendar view when date selection changes.
+  // Update the calendar month when a date range is selected
   React.useEffect(() => {
     if (date?.from) {
       setMonth(date.from)
@@ -95,7 +108,7 @@ export function DatePickerWithRange({
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <div className="space-y-4 p-4">
-            {/* Month and Year Navigation */}
+            {/* Month navigation */}
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -105,48 +118,23 @@ export function DatePickerWithRange({
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-
-              {/* Month Selector */}
               <Select
                 value={month.getMonth().toString()}
                 onValueChange={(value) => {
-                  setMonth(new Date(month.getFullYear(), parseInt(value), month.getDate()))
+                  setMonth(new Date(month.getFullYear(), parseInt(value)))
                 }}
               >
-                <SelectTrigger className="h-7 w-[120px]">
-                  <SelectValue>{format(month, "MMMM")}</SelectValue>
+                <SelectTrigger className="h-7 w-[140px]">
+                  <SelectValue>{format(month, "MMMM yyyy")}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {Array.from({ length: 12 }, (_, i) => (
                     <SelectItem key={i} value={i.toString()}>
-                      {format(new Date(month.getFullYear(), i), "MMMM")}
+                      {format(new Date(month.getFullYear(), i), "MMMM yyyy")}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-
-              {/* Year Selector */}
-              <Select
-                value={month.getFullYear().toString()}
-                onValueChange={(value) => {
-                  setMonth(new Date(parseInt(value), month.getMonth(), month.getDate()))
-                }}
-              >
-                <SelectTrigger className="h-7 w-[80px]">
-                  <SelectValue>{format(month, "yyyy")}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 21 }, (_, i) => {
-                    const year = new Date().getFullYear() - 10 + i
-                    return (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    )
-                  })}
-                </SelectContent>
-              </Select>
-
               <Button
                 variant="outline"
                 size="icon"
@@ -157,7 +145,7 @@ export function DatePickerWithRange({
               </Button>
             </div>
 
-            {/* Preset Buttons */}
+            {/* Preset buttons */}
             <div className="flex flex-wrap gap-2">
               {presets.map((preset) => {
                 const isActive =
@@ -170,7 +158,10 @@ export function DatePickerWithRange({
                     key={preset.name}
                     variant="outline"
                     size="sm"
-                    className={cn("text-xs", isActive && "bg-accent text-accent-foreground")}
+                    className={cn(
+                      "text-xs",
+                      isActive && "bg-accent text-accent-foreground"
+                    )}
                     onClick={() => {
                       setDate(preset.dates)
                       setIsOpen(false)
@@ -180,7 +171,7 @@ export function DatePickerWithRange({
                   </Button>
                 )
               })}
-              {/* Clear Selection Button */}
+              {/* Clear selection button */}
               {date && date.from && (
                 <Button
                   variant="ghost"
@@ -196,14 +187,15 @@ export function DatePickerWithRange({
               )}
             </div>
 
-            {/* Calendar Component (Controlled with the "month" prop) */}
+            {/* Calendar component */}
             <div className="rounded-md border">
               <Calendar
                 mode="range"
-                month={month}
+                defaultMonth={month}
                 selected={date}
                 onSelect={(newDate) => {
                   setDate(newDate)
+                  // Close the popover only if both dates are selected
                   if (newDate?.from && newDate?.to) {
                     setIsOpen(false)
                   }
