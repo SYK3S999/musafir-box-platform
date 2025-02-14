@@ -97,7 +97,7 @@ const Header = () => {
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              Voyageur
+              MusafirBox
             </motion.span>
           </Link>
           <nav className="hidden md:flex items-center space-x-1">
@@ -235,7 +235,7 @@ const MobileNav = ({ navItems }: { navItems: { name: string; path: string; icon:
     <div className="min-h-screen bg-background pt-6 pb-20">
       <div className="px-6 pb-6 mb-6 border-b">
         <Link href="/" className="flex items-center space-x-2">
-          <span className="font-bold text-xl">Voyageur</span>
+          <span className="font-bold text-xl">MusafirBox</span>
         </Link>
       </div>
       <nav className="px-3">

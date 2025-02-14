@@ -105,7 +105,7 @@ const Header = () => {
             >
               <Image 
                 src="/Musafer.png" 
-                alt="Voyageur Logo" 
+                alt="MusafirBox Logo" 
                 width={100} 
                 height={30} 
                 className="w-24 sm:w-20 h-auto transition-opacity duration-300 group-hover:opacity-90" 

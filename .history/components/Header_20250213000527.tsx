@@ -98,7 +98,7 @@ const Header = () => {
             
             <Image 
             src="/images/Musafer.png?cacheBust=1"  // Adding a query param to prevent caching issues
-            alt="Voyageur Logo" 
+            alt="MusafirBox Logo" 
             width={100} 
             height={30} 
             className="w-16 sm:w-20 h-auto" 
@@ -245,7 +245,7 @@ const MobileNav = ({ navItems }: { navItems: { name: string; path: string; icon:
         <Link href="/" className="mr-4 sm:mr-8 flex items-center space-x-2 relative group">
           <Image 
             src="/images/Musafer.png" 
-            alt="Voyageur Logo" 
+            alt="MusafirBox Logo" 
             width={120} 
             height={40} 
             className="w-24 sm:w-32" 

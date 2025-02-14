@@ -95,7 +95,7 @@ const Header = () => {
         <Link href="/" className="mr-4 sm:mr-8 flex items-center space-x-2 relative group">
             <Image 
               src="/images/Musafer_logo.png" 
-              alt="Voyageur Logo" 
+              alt="MusafirBox Logo" 
               width={120} 
               height={40} 
               className="w-20 sm:w-24 md:w-28 lg:w-32 h-auto" 
@@ -237,7 +237,7 @@ const MobileNav = ({ navItems }: { navItems: { name: string; path: string; icon:
     <div className="min-h-screen bg-background pt-6 pb-20">
       <div className="px-6 pb-6 mb-6 border-b">
         <Link href="/" className="mr-4 sm:mr-8 flex items-center space-x-2 relative group">
-            <Image src="/logo.png" alt="Voyageur Logo" width={120} height={40} className="w-24 sm:w-32" />
+            <Image src="/logo.png" alt="MusafirBox Logo" width={120} height={40} className="w-24 sm:w-32" />
           </Link>
       </div>
       <nav className="px-3">

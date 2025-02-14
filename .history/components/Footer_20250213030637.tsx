@@ -50,10 +50,10 @@ const Footer = () => {
           <motion.div className="lg:col-span-5 space-y-6 sm:space-y-8" variants={itemVariants}>
             <div className="space-y-4">
               <h3 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80">
-                Voyageur
+                MusafirBox
               </h3>
               <p className="text-lg text-secondary-foreground/90 leading-relaxed">
-                Embark on extraordinary journeys with Voyageur. Where every destination tells a story, and every journey
+                Embark on extraordinary journeys with MusafirBox. Where every destination tells a story, and every journey
                 becomes a cherished memory.
               </p>
             </div>
@@ -74,7 +74,7 @@ const Footer = () => {
                   <Mail className="w-5 h-5 mt-1 text-primary" />
                   <div>
                     <h4 className="font-medium mb-1">Email Us</h4>
-                    <p className="text-sm text-secondary-foreground/80">contact@voyageur.com</p>
+                    <p className="text-sm text-secondary-foreground/80">contact@MusafirBox.com</p>
                   </div>
                 </div>
               </div>
@@ -188,7 +188,7 @@ const Footer = () => {
           className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-primary/20 text-center"
         >
           <p className="text-sm sm:text-base text-secondary-foreground/70">
-            © {new Date().getFullYear()} Voyageur. All rights reserved.
+            © {new Date().getFullYear()} MusafirBox. All rights reserved.
           </p>
         </motion.div>
       </div>

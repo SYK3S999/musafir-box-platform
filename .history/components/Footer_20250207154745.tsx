@@ -52,10 +52,10 @@ const Footer = () => {
           <motion.div className="lg:col-span-5 space-y-6 sm:space-y-8" variants={itemVariants}>
             <div className="space-y-4">
               <h3 className="text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/80">
-                Voyageur
+                MusafirBox
               </h3>
               <p className="text-lg text-primary-foreground/80 leading-relaxed">
-                Embark on extraordinary journeys with Voyageur. Where every destination tells a story, and every journey
+                Embark on extraordinary journeys with MusafirBox. Where every destination tells a story, and every journey
                 becomes a cherished memory.
               </p>
             </div>
@@ -76,7 +76,7 @@ const Footer = () => {
                   <Mail className="w-5 h-5 mt-1 text-primary-foreground/70" />
                   <div>
                     <h4 className="font-medium mb-1">Email Us</h4>
-                    <p className="text-sm text-primary-foreground/70">contact@voyageur.com</p>
+                    <p className="text-sm text-primary-foreground/70">contact@MusafirBox.com</p>
                   </div>
                 </div>
               </div>
@@ -187,7 +187,7 @@ const Footer = () => {
         {/* Copyright */}
         <motion.div variants={itemVariants} className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/10 text-center">
           <p className="text-sm sm:text-base text-primary-foreground/60">
-            © {new Date().getFullYear()} Voyageur. All rights reserved.
+            © {new Date().getFullYear()} MusafirBox. All rights reserved.
           </p>
         </motion.div>
       </div>

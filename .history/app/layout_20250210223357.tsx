@@ -15,7 +15,7 @@ import { AdminProvider } from "@/contexts/AdminContext"
 const inter = Inter({ subsets: ["latin"] })
 
 // export const metadata = {
-//   title: "Voyageur - Your Ultimate Travel Companion",
+//   title: "MusafirBox - Your Ultimate Travel Companion",
 //   description: "Discover and book amazing travel experiences with top agencies worldwide",
 // }
 
