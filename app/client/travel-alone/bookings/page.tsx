@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -66,7 +66,7 @@ export default function TravelRegistrationsPage() {
       if (savedRegistrations) {
         setRegistrations(JSON.parse(savedRegistrations))
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: "Error",
         description: "Failed to load travel registrations",
@@ -95,7 +95,7 @@ export default function TravelRegistrationsPage() {
         title: "Success",
         description: "Travel plan deleted successfully",
       })
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: "Error",
         description: "Failed to delete travel plan",

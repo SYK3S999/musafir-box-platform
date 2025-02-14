@@ -419,7 +419,7 @@ export default function TravelAlonePage() {
       setTimeout(() => {
         router.push("/client/travel-alone/bookings")
       }, 1500)
-    } catch (_error) {
+    } catch (error) {
       toast({
         description: "Failed to submit travel plan. Please try again.",
         variant: "destructive",
