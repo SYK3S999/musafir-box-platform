@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,7 +37,7 @@ const getNavItems = (role: string | undefined) => {
     { name: "Agencies Bookings", path: "/client/bookings", icon: Calendar },
     
     { name: "Travel Alone", path: "/client/travel-alone", icon: Calendar },
-    { name: "Solo Bookings", path : "/client/travel-alone/bookings",icon: Calendar}
+    { name: "S Bookings", path : "/client/travel-alone/bookings",icon: Calendar}
   ]
 
   const agencyItems = [
@@ -67,7 +67,6 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
-  const router = useRouter()
 
   const isActive = (path: string) => pathname === path
 
@@ -249,17 +248,13 @@ const Header = () => {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => {
-                      logout() // Call the logout function
-                      router.push("/") // Redirect to home page
-                    }}
+                  <DropdownMenuItem 
+                    onClick={logout}
                     className="p-2 rounded-lg cursor-pointer text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>
-
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
