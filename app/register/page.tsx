@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plane, User, Building2, Lock, ChevronRight, ChevronLeft, Check, Mail, Phone, Key, MapPin } from "lucide-react"
+import { Plane, User, Building2, Lock, ChevronRight, ChevronLeft, Check, Mail, Phone, Key, MapPin, Clock } from "lucide-react"
 
 const steps = [
   { 
@@ -165,10 +165,10 @@ const SuccessPopup = ({ message, onClose }: { message: string, onClose: () => vo
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.2, duration: 0.3 }}
     >
-      <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-6">
-        <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
+      <div className="w-16 h-16 bg-orange-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-6">
+      <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
       </div>
-      <h3 className="text-2xl font-semibold mb-4">Success!</h3>
+      <h3 className="text-2xl font-semibold mb-4">Pending !</h3>
       <p className="text-gray-600 dark:text-gray-400 mb-6">{message}</p>
       <Button onClick={onClose} className="w-full">
         Return to Homepage
