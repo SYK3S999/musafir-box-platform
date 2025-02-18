@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, X, Search, Home, Package, Info, Mail, User, Calendar, LogOut,  LayoutDashboard,Users,Building2, Heart, } from "lucide-react"
+import { Menu, X, Search, Home, Package, Info, Mail, User, Calendar, LogOut,  LayoutDashboard,Users,Building2, } from "lucide-react"
 import { ModeToggle } from "@/components/mode-toggle"
 import { useAuth } from "@/contexts/AuthContext"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -37,8 +37,7 @@ const getNavItems = (role: string | undefined) => {
     { name: "Agencies Bookings", path: "/client/bookings", icon: Calendar },
     
     { name: "Travel Alone", path: "/client/travel-alone", icon: Calendar },
-    { name: "Solo Bookings", path : "/client/travel-alone/bookings",icon: Calendar},
-    { name: "Wishlist", path : "/client/wishlist",icon: Heart},
+    { name: "Solo Bookings", path : "/client/travel-alone/bookings",icon: Calendar}
   ]
 
   const agencyItems = [

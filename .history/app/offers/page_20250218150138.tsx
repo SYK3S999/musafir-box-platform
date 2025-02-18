@@ -18,7 +18,6 @@ import {
   X,
   Heart
 } from "lucide-react"
-import { useAuth } from "@/contexts/AuthContext"
 
 // Types
 export type Offer = {
@@ -166,7 +165,7 @@ function OfferCard({
   onBookNow: (id: number) => void
   onToggleWishlist: (offer: Offer) => void
   isWishlisted: boolean
-  user: { id: string; role: "client" | "agency" | "admin" } | null // ✅ Match AuthContext user
+  user: User
 }) {
   const [showLoginModal, setShowLoginModal] = useState(false)
   const primaryImage = offer.images[0]
@@ -174,7 +173,7 @@ function OfferCard({
 
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!user || user.role !== 'client') {
+    if (!user || user.type !== 'client') {
       setShowLoginModal(true);
       return; // Stop execution here
     }
@@ -271,8 +270,6 @@ function OfferCard({
 
 
 function OffersContent() {
-  const { user } = useAuth() // ✅ Get authenticated user
-
   const searchParams = useSearchParams()
   const initialCategory = searchParams.get("category") || "all"
   const router = useRouter()
@@ -284,25 +281,17 @@ function OffersContent() {
   const [difficulty, setDifficulty] = useState("all")
   const [wishlist, setWishlist] = useState<Offer[]>([])
 
+  const [user, setUser] = useState<User | null>(null);
+
   useEffect(() => {
-    const savedWishlist = localStorage.getItem("wishlist")
-    if (savedWishlist) {
-      setWishlist(JSON.parse(savedWishlist))
+    const storedUser = localStorage.getItem("user"); // Assuming user is stored in localStorage
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
     }
-  }, [])
-  useEffect(() => {
-    if (!user) {
-      // Reset wishlist when user logs out
-      setWishlist([]);
-      localStorage.removeItem("wishlist"); // Clear wishlist from localStorage
-    }
-  }, [user]); // Run this effect when `user` changes
-  
+  }, []);
   
 
   const handleToggleWishlist = (offer: Offer) => {
-    if (!user || user.role !== "client") return // ✅ Prevent action if user is not a client
-
     const isCurrentlyWishlisted = wishlist.some(item => item.id === offer.id)
     let newWishlist: Offer[]
     
@@ -519,12 +508,14 @@ function OffersContent() {
 
               return (
                 <OfferCard
-                  key={offer.id}
-                  offer={offer}
-                  CategoryIcon={CategoryIcon}
-                  onBookNow={handleBookNow}
-                  onToggleWishlist={handleToggleWishlist}
-                  isWishlisted={isWishlisted} user={user}                />
+                key={offer.id}
+                offer={offer}
+                CategoryIcon={CategoryIcon}
+                onBookNow={handleBookNow}
+                onToggleWishlist={handleToggleWishlist}
+                isWishlisted={isWishlisted}
+                user={user} // ✅ Pass the actual user state
+                />
               )
             })}
           </motion.div>

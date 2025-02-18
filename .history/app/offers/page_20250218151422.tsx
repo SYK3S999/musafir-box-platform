@@ -109,7 +109,7 @@ const offers = [
 ]
 type User = {
   id: string;
-  type: 'client' | 'admin' | 'agent';
+  role: 'client' | 'admin' | 'agent';
 } | null;
 
 
@@ -166,7 +166,7 @@ function OfferCard({
   onBookNow: (id: number) => void
   onToggleWishlist: (offer: Offer) => void
   isWishlisted: boolean
-  user: { id: string; role: "client" | "agency" | "admin" } | null // ✅ Match AuthContext user
+  user: User
 }) {
   const [showLoginModal, setShowLoginModal] = useState(false)
   const primaryImage = offer.images[0]
@@ -174,7 +174,7 @@ function OfferCard({
 
   const handleWishlistClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!user || user.role !== 'client') {
+    if (!user || user.type !== 'client') {
       setShowLoginModal(true);
       return; // Stop execution here
     }
@@ -290,14 +290,6 @@ function OffersContent() {
       setWishlist(JSON.parse(savedWishlist))
     }
   }, [])
-  useEffect(() => {
-    if (!user) {
-      // Reset wishlist when user logs out
-      setWishlist([]);
-      localStorage.removeItem("wishlist"); // Clear wishlist from localStorage
-    }
-  }, [user]); // Run this effect when `user` changes
-  
   
 
   const handleToggleWishlist = (offer: Offer) => {

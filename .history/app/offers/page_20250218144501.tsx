@@ -18,7 +18,6 @@ import {
   X,
   Heart
 } from "lucide-react"
-import { useAuth } from "@/contexts/AuthContext"
 
 // Types
 export type Offer = {
@@ -166,21 +165,20 @@ function OfferCard({
   onBookNow: (id: number) => void
   onToggleWishlist: (offer: Offer) => void
   isWishlisted: boolean
-  user: { id: string; role: "client" | "agency" | "admin" } | null // ✅ Match AuthContext user
+  user: User
 }) {
   const [showLoginModal, setShowLoginModal] = useState(false)
   const primaryImage = offer.images[0]
   const secondaryImage = offer.images[1] || "https://via.placeholder.com/600x400"
 
   const handleWishlistClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!user || user.role !== 'client') {
-      setShowLoginModal(true);
-      return; // Stop execution here
+    e.stopPropagation()
+    if (!user || user.type !== 'client') {
+      setShowLoginModal(true)
+    } else {
+      onToggleWishlist(offer)
     }
-    onToggleWishlist(offer);
-  };
-  
+  }
 
   return (
     <motion.div
@@ -271,8 +269,6 @@ function OfferCard({
 
 
 function OffersContent() {
-  const { user } = useAuth() // ✅ Get authenticated user
-
   const searchParams = useSearchParams()
   const initialCategory = searchParams.get("category") || "all"
   const router = useRouter()
@@ -290,19 +286,8 @@ function OffersContent() {
       setWishlist(JSON.parse(savedWishlist))
     }
   }, [])
-  useEffect(() => {
-    if (!user) {
-      // Reset wishlist when user logs out
-      setWishlist([]);
-      localStorage.removeItem("wishlist"); // Clear wishlist from localStorage
-    }
-  }, [user]); // Run this effect when `user` changes
-  
-  
 
   const handleToggleWishlist = (offer: Offer) => {
-    if (!user || user.role !== "client") return // ✅ Prevent action if user is not a client
-
     const isCurrentlyWishlisted = wishlist.some(item => item.id === offer.id)
     let newWishlist: Offer[]
     
@@ -524,7 +509,7 @@ function OffersContent() {
                   CategoryIcon={CategoryIcon}
                   onBookNow={handleBookNow}
                   onToggleWishlist={handleToggleWishlist}
-                  isWishlisted={isWishlisted} user={user}                />
+                  isWishlisted={isWishlisted} user={null}                />
               )
             })}
           </motion.div>

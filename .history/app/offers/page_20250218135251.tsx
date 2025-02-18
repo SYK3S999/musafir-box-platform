@@ -2,10 +2,8 @@
 
 import { useState, useMemo, Suspense, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
+import { useRouter, useSearchParams } from "next/navigation"
 import { 
   MapPin, 
   Filter, 
@@ -18,7 +16,6 @@ import {
   X,
   Heart
 } from "lucide-react"
-import { useAuth } from "@/contexts/AuthContext"
 
 // Types
 export type Offer = {
@@ -107,11 +104,6 @@ const offers = [
     agency_name: "Sacred Journeys"
   }
 ]
-type User = {
-  id: string;
-  type: 'client' | 'admin' | 'agent';
-} | null;
-
 
 const categoryIcons = {
   beach: Waves,
@@ -121,66 +113,23 @@ const categoryIcons = {
   adventure: Plane,
   all: MapPin
 }
-function LoginModal({ 
-  isOpen, 
-  onClose 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void;
-}) {
-  const router = useRouter()
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Login Required</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <p className="text-muted-foreground">
-            Please log in to add items to your wishlist.
-          </p>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button onClick={() => router.push('/login')}>
-              Log In
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
+// OfferCard Component
 function OfferCard({ 
   offer, 
   CategoryIcon, 
   onBookNow, 
   onToggleWishlist,
-  isWishlisted,
-  user
+  isWishlisted 
 }: {
   offer: Offer
   CategoryIcon: any
   onBookNow: (id: number) => void
   onToggleWishlist: (offer: Offer) => void
   isWishlisted: boolean
-  user: { id: string; role: "client" | "agency" | "admin" } | null // ✅ Match AuthContext user
 }) {
-  const [showLoginModal, setShowLoginModal] = useState(false)
   const primaryImage = offer.images[0]
   const secondaryImage = offer.images[1] || "https://via.placeholder.com/600x400"
-
-  const handleWishlistClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!user || user.role !== 'client') {
-      setShowLoginModal(true);
-      return; // Stop execution here
-    }
-    onToggleWishlist(offer);
-  };
-  
 
   return (
     <motion.div
@@ -210,7 +159,10 @@ function OfferCard({
           <CategoryIcon className="w-5 h-5 text-primary" />
         </div>
         <button
-          onClick={handleWishlistClick}
+          onClick={(e) => {
+            e.stopPropagation()
+            onToggleWishlist(offer)
+          }}
           className="absolute bottom-4 right-4 bg-background/80 p-2 rounded-full hover:bg-background transition-colors"
         >
           <Heart 
@@ -220,7 +172,6 @@ function OfferCard({
           />
         </button>
       </div>
-
       
       <div className="p-6">
         <div className="flex justify-between items-start mb-4">
@@ -261,18 +212,11 @@ function OfferCard({
           Book Now
         </button>
       </div>
-      <LoginModal 
-        isOpen={showLoginModal} 
-        onClose={() => setShowLoginModal(false)} 
-      />
     </motion.div>
   )
 }
 
-
 function OffersContent() {
-  const { user } = useAuth() // ✅ Get authenticated user
-
   const searchParams = useSearchParams()
   const initialCategory = searchParams.get("category") || "all"
   const router = useRouter()
@@ -290,19 +234,8 @@ function OffersContent() {
       setWishlist(JSON.parse(savedWishlist))
     }
   }, [])
-  useEffect(() => {
-    if (!user) {
-      // Reset wishlist when user logs out
-      setWishlist([]);
-      localStorage.removeItem("wishlist"); // Clear wishlist from localStorage
-    }
-  }, [user]); // Run this effect when `user` changes
-  
-  
 
   const handleToggleWishlist = (offer: Offer) => {
-    if (!user || user.role !== "client") return // ✅ Prevent action if user is not a client
-
     const isCurrentlyWishlisted = wishlist.some(item => item.id === offer.id)
     let newWishlist: Offer[]
     
@@ -524,7 +457,8 @@ function OffersContent() {
                   CategoryIcon={CategoryIcon}
                   onBookNow={handleBookNow}
                   onToggleWishlist={handleToggleWishlist}
-                  isWishlisted={isWishlisted} user={user}                />
+                  isWishlisted={isWishlisted}
+                />
               )
             })}
           </motion.div>

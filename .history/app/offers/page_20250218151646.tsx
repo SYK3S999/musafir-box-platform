@@ -290,14 +290,6 @@ function OffersContent() {
       setWishlist(JSON.parse(savedWishlist))
     }
   }, [])
-  useEffect(() => {
-    if (!user) {
-      // Reset wishlist when user logs out
-      setWishlist([]);
-      localStorage.removeItem("wishlist"); // Clear wishlist from localStorage
-    }
-  }, [user]); // Run this effect when `user` changes
-  
   
 
   const handleToggleWishlist = (offer: Offer) => {
