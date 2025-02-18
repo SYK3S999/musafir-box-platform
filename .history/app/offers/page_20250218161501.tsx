@@ -1,8 +1,11 @@
 "use client"
-import { useState, useMemo, Suspense } from "react"
+
+import { useState, useMemo, Suspense, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import Image from "next/image"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import { useRouter, useSearchParams } from "next/navigation"
+import Image from "next/image"
 import { 
   MapPin, 
   Filter, 
@@ -12,8 +15,24 @@ import {
   Compass, 
   SunDim, 
   Waves,
-  X
+  X,
+  Heart
 } from "lucide-react"
+import { useAuth } from "@/contexts/AuthContext"
+
+// Types
+export type Offer = {
+  id: number
+  title: string
+  description: string
+  price: number
+  category: string
+  duration: string
+  difficulty: string
+  tags: string[]
+  images: string[]
+  agency_name: string
+}
 
 // Enhanced mock data with multiple image fallbacks
 const offers = [
@@ -28,7 +47,6 @@ const offers = [
     tags: ["Luxury", "Relaxation"],
     images: [
       "https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?auto=format&fit=crop&w=800&q=80"
-      
     ],
     agency_name: "Wanderlust Adventures"
   },
@@ -42,8 +60,7 @@ const offers = [
     difficulty: "Challenging",
     tags: ["Spiritual", "Religious"],
     images: [
-      "https://img.freepik.com/photos-gratuite/dans-celebre-mosquee-sheikh-zayed-abu-dhabi-nuit-emirats-arabes-unis_268835-1068.jpg?t=st=1739575016~exp=1739578616~hmac=0d55ed911832f945c9077d0b3c4650f4b6c9ba492ecfd21efb39214f13c1447e&w=740",
-      
+      "https://img.freepik.com/photos-gratuite/dans-celebre-mosquee-sheikh-zayed-abu-dhabi-nuit-emirats-arabes-unis_268835-1068.jpg"
     ],
     agency_name: "Sacred Journeys"
   },
@@ -71,7 +88,7 @@ const offers = [
     difficulty: "Moderate",
     tags: ["Adventure", "Nature"],
     images: [
-      "https://img.freepik.com/photos-gratuite/jeune-fille-marches-maison-arbre-au-lever-du-soleil-dans-ile-nusa-penida-bali-indonesie_335224-350.jpg?t=st=1739575625~exp=1739579225~hmac=6ab81afdae951ac15e1a2591b742bda8e126bad1c0def87ca57d77fc460cf929&w=1380"
+      "https://img.freepik.com/photos-gratuite/jeune-fille-marches-maison-arbre-au-lever-du-soleil-dans-ile-nusa-penida-bali-indonesie_335224-350.jpg"
     ],
     agency_name: "Sacred Journeys"
   },
@@ -85,11 +102,16 @@ const offers = [
     difficulty: "Challenging",
     tags: ["Cultural", "Adventure"],
     images: [
-      "https://img.freepik.com/photos-gratuite/ombres-chameaux-dans-desert-du-sahara-merzouga_661209-123.jpg?t=st=1739575345~exp=1739578945~hmac=a0b7c64fdf2f12e42d945e72d0d6b819a9a4653f5665dced7c84ef9a23359d81&w=1380"
+      "https://img.freepik.com/photos-gratuite/ombres-chameaux-dans-desert-du-sahara-merzouga_661209-123.jpg"
     ],
     agency_name: "Sacred Journeys"
   }
 ]
+type User = {
+  id: string;
+  type: 'client' | 'admin' | 'agent';
+} | null;
+
 
 const categoryIcons = {
   beach: Waves,
@@ -99,8 +121,166 @@ const categoryIcons = {
   adventure: Plane,
   all: MapPin
 }
+function LoginModal({ 
+  isOpen, 
+  onClose 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void;
+}) {
+  const router = useRouter()
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Login Required</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <p className="text-muted-foreground">
+            Please log in to add items to your wishlist.
+          </p>
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button onClick={() => router.push('/login')}>
+              Log In
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+function OfferCard({ 
+  offer, 
+  CategoryIcon, 
+  onBookNow, 
+  onToggleWishlist,
+  isWishlisted,
+  user
+}: {
+  offer: Offer
+  CategoryIcon: any
+  onBookNow: (id: number) => void
+  onToggleWishlist: (offer: Offer) => void
+  isWishlisted: boolean
+  user: User
+}) {
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const primaryImage = offer.images[0]
+  const secondaryImage = offer.images[1] || "https://via.placeholder.com/600x400"
+
+  const handleWishlistClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user || user.type !== 'client') {
+      setShowLoginModal(true);
+      return; // Stop execution here
+    }
+    onToggleWishlist(offer);
+  };
+  
+  const handleBookNow = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user || user.type !== 'client') {  // ✅ Check user type instead of role
+      setShowLoginModal(true);
+      return;
+    }
+    onBookNow(offer.id);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      whileHover={{ scale: 1.05 }}
+      transition={{ type: "spring", stiffness: 300 }}
+      className="bg-background border border-primary/10 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all group relative"
+    >
+      <div className="relative">
+        <Image 
+          src={primaryImage}
+          alt={offer.title} 
+          width={600}
+          height={400}
+          onError={(e) => {
+            const imgElement = e.target as HTMLImageElement
+            imgElement.src = secondaryImage
+          }}
+          className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-300"
+        />
+        <div className="absolute top-4 right-4 bg-primary/80 text-primary-foreground px-3 py-1 rounded-full text-sm">
+          ${offer.price}
+        </div>
+        <div className="absolute top-4 left-4 bg-background/80 p-2 rounded-full">
+          <CategoryIcon className="w-5 h-5 text-primary" />
+        </div>
+        <button
+          onClick={handleWishlistClick}
+          className="absolute bottom-4 right-4 bg-background/80 p-2 rounded-full hover:bg-background transition-colors"
+        >
+          <Heart 
+            className={`w-5 h-5 transition-colors ${
+              isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"
+            }`} 
+          />
+        </button>
+      </div>
+
+      
+      <div className="p-6">
+        <div className="flex justify-between items-start mb-4">
+          <h2 className="text-xl font-bold">{offer.title}</h2>
+        </div>
+        
+        <p className="text-sm text-muted-foreground mb-2">
+          Offered by: <span className="font-medium text-primary">{offer.agency_name}</span>
+        </p>
+        
+        <p className="text-muted-foreground mb-4">{offer.description}</p>
+        
+        <div className="flex justify-between items-center">
+          <div className="flex space-x-2">
+            {offer.tags.map((tag) => (
+              <span 
+                key={tag} 
+                className="bg-secondary text-secondary-foreground px-2 py-1 rounded-full text-xs"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+          <div className="text-sm text-muted-foreground flex items-center gap-2">
+            <span>{offer.duration}</span>
+            <span className="text-xs bg-primary/10 px-2 py-1 rounded-full">
+              {offer.difficulty}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="p-6 pt-0">
+        <button 
+          onClick={handleBookNow}
+          className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+        >
+          Book Now
+        </button>
+      </div>
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)} 
+      />
+    </motion.div>
+  )
+}
+
 
 function OffersContent() {
+  const { user } = useAuth() // ✅ Get authenticated user
+
   const searchParams = useSearchParams()
   const initialCategory = searchParams.get("category") || "all"
   const router = useRouter()
@@ -110,6 +290,31 @@ function OffersContent() {
   const [sortBy, setSortBy] = useState("price")
   const [priceRange, setPriceRange] = useState([0, 3000])
   const [difficulty, setDifficulty] = useState("all")
+  const [wishlist, setWishlist] = useState<Offer[]>([])
+
+  useEffect(() => {
+    const savedWishlist = localStorage.getItem("wishlist")
+    if (savedWishlist) {
+      setWishlist(JSON.parse(savedWishlist))
+    }
+  }, [])
+  
+
+  const handleToggleWishlist = (offer: Offer) => {
+    if (!user || user.type !== "client") return // ✅ Prevent action if user is not a client
+
+    const isCurrentlyWishlisted = wishlist.some(item => item.id === offer.id)
+    let newWishlist: Offer[]
+    
+    if (isCurrentlyWishlisted) {
+      newWishlist = wishlist.filter(item => item.id !== offer.id)
+    } else {
+      newWishlist = [...wishlist, offer]
+    }
+    
+    setWishlist(newWishlist)
+    localStorage.setItem("wishlist", JSON.stringify(newWishlist))
+  }
 
   const filteredOffers = useMemo(() => {
     return offers
@@ -118,7 +323,7 @@ function OffersContent() {
         offer.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
         offer.price >= priceRange[0] &&
         offer.price <= priceRange[1] &&
-        (difficulty === "all" || offer.difficulty.toLowerCase() === difficulty)
+        (difficulty === "all" || offer.difficulty.toLowerCase() === difficulty.toLowerCase())
       )
       .sort((a, b) => {
         switch(sortBy) {
@@ -148,8 +353,11 @@ function OffersContent() {
   }
 
   const handleBookNow = (offerId: number) => {
-    router.push(`client/booking/${offerId}`)
-  }
+    if (!user || user.type !== 'client') {
+      return; // Prevent booking if not a client
+    }
+    router.push(`/booking/${offerId}`);
+  };
 
   return (
     <div className="container mx-auto px-6 py-12">
@@ -263,6 +471,18 @@ function OffersContent() {
                 <option value="duration">Sort by Duration</option>
               </select>
             </div>
+
+            {/* Wishlist Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => router.push("/wishlist")}
+              className="bg-secondary text-secondary-foreground px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-secondary/80 transition-all"
+            >
+              <Heart className={`w-4 h-4 ${wishlist.length > 0 ? "fill-red-500 text-red-500" : ""}`} />
+              Wishlist ({wishlist.length})
+            </motion.button>
+
             <motion.button
               onClick={clearFilters}
               whileHover={{ scale: 1.05 }}
@@ -298,80 +518,16 @@ function OffersContent() {
           >
             {filteredOffers.map((offer) => {
               const CategoryIcon = categoryIcons[offer.category as keyof typeof categoryIcons] || MapPin
-              const primaryImage = offer.images[0]
-              const secondaryImage = offer.images[1] || "https://via.placeholder.com/600x400"
+              const isWishlisted = wishlist.some(item => item.id === offer.id)
 
               return (
-                <motion.div
+                <OfferCard
                   key={offer.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                  className="bg-background border border-primary/10 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all group"
-                >
-                  <div className="relative">
-                    <Image 
-                      src={primaryImage}
-                      alt={offer.title} 
-                      width={600}
-                      height={400}
-                      onError={(e) => {
-                        const imgElement = e.target as HTMLImageElement
-                        imgElement.src = secondaryImage
-                      }}
-                      className="w-full h-56 object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                    <div className="absolute top-4 right-4 bg-primary/80 text-primary-foreground px-3 py-1 rounded-full text-sm">
-                      ${offer.price}
-                    </div>
-                    <div className="absolute top-4 left-4 bg-background/80 p-2 rounded-full">
-                    <CategoryIcon className="w-5 h-5 text-primary" />
-                    </div>
-                  </div>
-                  
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <h2 className="text-xl font-bold">{offer.title}</h2>
-                    </div>
-                    
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Offered by: <span className="font-medium text-primary">{offer.agency_name}</span>
-                    </p>
-                    
-                    <p className="text-muted-foreground mb-4">{offer.description}</p>
-                    
-                    <div className="flex justify-between items-center">
-                      <div className="flex space-x-2">
-                        {offer.tags.map((tag) => (
-                          <span 
-                            key={tag} 
-                            className="bg-secondary text-secondary-foreground px-2 py-1 rounded-full text-xs"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="text-sm text-muted-foreground flex items-center gap-2">
-                        <span>{offer.duration}</span>
-                        <span className="text-xs bg-primary/10 px-2 py-1 rounded-full">
-                          {offer.difficulty}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="p-6 pt-0">
-                    <button 
-                      onClick={() => handleBookNow(offer.id)}
-                      className="w-full bg-primary text-primary-foreground py-3 rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Compass className="w-5 h-5" />
-                      Book Now
-                    </button>
-                  </div>
-                </motion.div>
+                  offer={offer}
+                  CategoryIcon={CategoryIcon}
+                  onBookNow={handleBookNow}
+                  onToggleWishlist={handleToggleWishlist}
+                  isWishlisted={isWishlisted} user={user}                />
               )
             })}
           </motion.div>
