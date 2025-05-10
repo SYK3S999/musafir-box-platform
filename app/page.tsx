@@ -8,6 +8,7 @@ import { PremiumAgencies } from "@/components/PremiumAgencies"
 import { motion } from "framer-motion"
 import type React from "react"
 import TravelRecommendations from "@/components/recommendations"
+import { useAuth } from "@/contexts/AuthContext"
 
 const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   <motion.div
@@ -48,6 +49,8 @@ const SectionSeparator = () => (
 )
 
 export default function Home() {
+  const { user } = useAuth(); // Get user from AuthContext
+
   return (
     <div className="flex flex-col">
       <HeroSection />
@@ -66,12 +69,16 @@ export default function Home() {
 
         <SectionSeparator />
 
-        <SectionWrapper>
-          <SectionTitle>Recommended for You</SectionTitle>
-          <TravelRecommendations />
-        </SectionWrapper>
-
-        <SectionSeparator />
+        {/* Show Recommendations only for logged-in clients */}
+        {user && user.role === "client" && (
+          <>
+            <SectionWrapper>
+              <SectionTitle>Recommended for You</SectionTitle>
+              <TravelRecommendations />
+            </SectionWrapper>
+            <SectionSeparator />
+          </>
+        )}
 
         <SectionWrapper className="bg-gradient-to-r from-background via-primary/5 to-background">
           <TravelCategories />
@@ -80,14 +87,13 @@ export default function Home() {
         <SectionSeparator />
 
         <SectionWrapper className="bg-gradient-to-l from-background via-primary/5 to-background">
-          <SectionTitle>Why MusafirBox Stands Out</SectionTitle>
+          <SectionTitle>Why musaferBox Stands Out</SectionTitle>
           <WhyChooseUs />
         </SectionWrapper>
 
         <SectionSeparator />
 
         <SectionWrapper>
-          
           <PremiumAgencies />
         </SectionWrapper>
       </div>

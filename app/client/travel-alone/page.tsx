@@ -25,8 +25,14 @@ import {
   Loader2,
   Hotel,
   Wallet,
+  Plane,
+  Car,
+  Train,
+  Utensils,
+  Accessibility,
 } from "lucide-react"
 import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import type { DateRange } from "react-day-picker"
 import { toast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
@@ -130,7 +136,7 @@ const TRANSPORTATION_MODES = [
   "Bike Rental",
 ] as const
 
-const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD"] as const
+const CURRENCIES = ["USD", "EUR"] as const
 
 const ACTIVITIES = [
   "Sightseeing",
@@ -143,9 +149,243 @@ const ACTIVITIES = [
   "Historical Sites",
 ] as const
 
+// Exchange rates (static for simplicity, as of May 2025)
+const EXCHANGE_RATES = {
+  DA: 1, // 1 DA = 1 DA
+  USD: 135, // 1 USD = 135 DA
+  EUR: 145, // 1 EUR = 145 DA
+  
+} as const
+
 // Add type safety for travel styles
 type TravelStyle = (typeof TRAVEL_STYLES)[number]
 type Currency = (typeof CURRENCIES)[number]
+
+// New TravelPlanResult Component
+function TravelPlanResult({
+  isOpen,
+  onClose,
+  travelPlan,
+  estimatedCost,
+  onProceed,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  travelPlan: TravelPlan
+  estimatedCost: number | null
+  onProceed: () => void
+}) {
+  // Convert budget and estimated cost to Algerian Dinar (DA)
+  const budgetInDA = travelPlan.budget.total * (EXCHANGE_RATES[travelPlan.budget.currency as Currency] || 135)
+  const estimatedCostInDA = estimatedCost ? estimatedCost * (EXCHANGE_RATES[travelPlan.budget.currency as Currency] || 135) : null
+
+  // Suggest a hotel based on accommodation type and travel style
+  const getSuggestedHotel = () => {
+    const { type, maxPrice } = travelPlan.accommodation
+    const { travelStyle } = travelPlan
+    const baseName = travelPlan.destinations[0] ? `${travelPlan.destinations[0]} ` : ""
+    const maxPriceInDA = maxPrice * (EXCHANGE_RATES[travelPlan.budget.currency as Currency] || 135)
+
+    switch (type) {
+      case "Hotel":
+        return travelStyle === "Luxury"
+          ? `${baseName}Grand Palace (5-star, ~${maxPriceInDA.toLocaleString()} DA/night)`
+          : `${baseName}Comfort Inn (3-star, ~${(maxPriceInDA * 0.7).toLocaleString()} DA/night)`
+      case "Resort":
+        return `${baseName}Beachfront Resort (~${maxPriceInDA.toLocaleString()} DA/night)`
+      case "Vacation Rental":
+        return `${baseName}Cozy Apartment (~${(maxPriceInDA * 0.6).toLocaleString()} DA/night)`
+      case "Hostel":
+        return `${baseName}Traveler's Hostel (~${(maxPriceInDA * 0.3).toLocaleString()} DA/night)`
+      case "Boutique Hotel":
+        return `${baseName}Chic Boutique (~${(maxPriceInDA * 0.9).toLocaleString()} DA/night)`
+      case "Camping":
+        return `${baseName}Nature Campsite (~${(maxPriceInDA * 0.2).toLocaleString()} DA/night)`
+      case "Homestay":
+        return `${baseName}Local Homestay (~${(maxPriceInDA * 0.5).toLocaleString()} DA/night)`
+      default:
+        return "Standard Hotel (~${maxPriceInDA.toLocaleString()} DA/night)"
+    }
+  }
+
+  // Suggest places to visit based on activities
+  const getPlacesToVisit = () => {
+    const places: { [key: string]: string[] } = {
+      Sightseeing: ["City Landmarks", "Scenic Viewpoints"],
+      "Adventure Sports": ["Mountain Trails", "Water Sports Centers"],
+      "Cultural Tours": ["Museums", "Cultural Festivals"],
+      "Food & Wine": ["Local Markets", "Gourmet Restaurants"],
+      Shopping: ["Shopping Districts", "Artisan Markets"],
+      Relaxation: ["Spas", "Beaches"],
+      "Nature & Wildlife": ["National Parks", "Wildlife Reserves"],
+      "Historical Sites": ["Ancient Ruins", "Historical Monuments"],
+    }
+
+    return travelPlan.activities
+      .flatMap((activity) => places[activity] || [])
+      .map((place) => (travelPlan.destinations[0] ? `${travelPlan.destinations[0]} ${place}` : place))
+  }
+
+  // Describe transportation arrangements
+  const getTransportationDetails = () => {
+    return travelPlan.transportationMode.map((mode) => {
+      switch (mode) {
+        case "Flight":
+          return { icon: Plane, text: "Round-trip flights to your destination" }
+        case "Train":
+          return { icon: Train, text: "Scenic train journeys between locations" }
+        case "Rental Car":
+          return { icon: Car, text: "Rental car for flexible exploration" }
+        case "Public Transport":
+          return { icon: Car, text: "Local buses and metro for city travel" }
+        case "Private Transfer":
+          return { icon: Car, text: "Private transfers for comfort" }
+        case "Walking Tours":
+          return { icon: Users, text: "Guided walking tours for immersion" }
+        case "Bike Rental":
+          return { icon: Car, text: "Bikes for eco-friendly exploration" }
+        default:
+          return { icon: Car, text: mode }
+      }
+    })
+  }
+
+  // Format dates
+  const formatDate = (date: Date | undefined) => (date ? date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "N/A")
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-2xl flex items-center gap-2">
+            <Sparkles className="w-6 h-6 text-primary" />
+            Your Personalized Travel Plan
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6 py-4">
+          {/* Destination */}
+          <div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-primary" />
+              Destination
+            </h3>
+            <p className="text-muted-foreground">
+              {travelPlan.destinations.length > 0 ? travelPlan.destinations.join(", ") : "Not specified"}
+            </p>
+          </div>
+
+          {/* Travel Dates */}
+          <div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary" />
+              Travel Dates
+            </h3>
+            <p className="text-muted-foreground">
+              {formatDate(travelPlan.dateRange?.from)} - {formatDate(travelPlan.dateRange?.to)}
+            </p>
+          </div>
+
+          {/* Hotel */}
+          <div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Hotel className="w-5 h-5 text-primary" />
+              Suggested Hotel
+            </h3>
+            <p className="text-muted-foreground">{getSuggestedHotel()}</p>
+          </div>
+
+          {/* Places to Visit */}
+          <div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Compass className="w-5 h-5 text-primary" />
+              Places to Visit
+            </h3>
+            <ul className="list-disc pl-5 text-muted-foreground">
+              {getPlacesToVisit().length > 0 ? (
+                getPlacesToVisit().map((place, index) => <li key={index}>{place}</li>)
+              ) : (
+                <li>No specific places selected</li>
+              )}
+            </ul>
+          </div>
+
+          {/* Budget */}
+          <div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-primary" />
+              Budget
+            </h3>
+            <p className="text-muted-foreground">
+              Your budget: {budgetInDA.toLocaleString()} DA (±{travelPlan.budget.flexibility}% flexibility)
+            </p>
+          </div>
+
+          {/* Approximate Price */}
+          <div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-primary" />
+              Estimated Price
+            </h3>
+            <p className="text-muted-foreground">
+              Approx. {estimatedCostInDA ? estimatedCostInDA.toLocaleString() : "N/A"} DA for {travelPlan.travelers} traveler{travelPlan.travelers > 1 ? "s" : ""}
+            </p>
+          </div>
+
+          {/* Transportation */}
+          <div>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Plane className="w-5 h-5 text-primary" />
+              Transportation
+            </h3>
+            <ul className="space-y-2">
+              {getTransportationDetails().map((transport, index) => (
+                <li key={index} className="flex items-center gap-2 text-muted-foreground">
+                  <transport.icon className="w-4 h-4" />
+                  {transport.text}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Accessibility Needs */}
+          {Object.values(travelPlan.accessibility).some(Boolean) && (
+            <div>
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Accessibility className="w-5 h-5 text-primary" />
+                Accessibility Needs
+              </h3>
+              <ul className="list-disc pl-5 text-muted-foreground">
+                {travelPlan.accessibility.wheelchairAccess && <li>Wheelchair-accessible facilities</li>}
+                {travelPlan.accessibility.mobilityAssistance && <li>Mobility assistance services</li>}
+                {travelPlan.accessibility.dietaryRestrictions && <li>Dietary accommodations</li>}
+              </ul>
+            </div>
+          )}
+
+          {/* Notes */}
+          {travelPlan.notes && (
+            <div>
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <ScrollText className="w-5 h-5 text-primary" />
+                Additional Notes
+              </h3>
+              <p className="text-muted-foreground">{travelPlan.notes}</p>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
+          <Button onClick={onProceed} className="gap-2">
+            View Bookings
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 const DEFAULT_ACCOMMODATION: AccommodationPreferences = {
   type: "Hotel",
@@ -155,7 +395,7 @@ const DEFAULT_ACCOMMODATION: AccommodationPreferences = {
 
 const DEFAULT_BUDGET: BudgetPreferences = {
   total: 5000,
-  currency: "USD" as Currency,
+  currency: "DA" as Currency,
   flexibility: 20,
 }
 
@@ -189,6 +429,8 @@ export default function TravelAlonePage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [isFormValid, setIsFormValid] = useState(false)
   const [estimatedCost, setEstimatedCost] = useState<number | null>(null)
+  const [showResultModal, setShowResultModal] = useState(false) // New state for result modal
+  const [currentTravelPlan, setCurrentTravelPlan] = useState<TravelPlan | null>(null) // Store submitted plan
 
   // Loading states
   const [isLoading, setIsLoading] = useState({
@@ -247,7 +489,7 @@ export default function TravelAlonePage() {
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [isFormValid]) // Reduced dependencies
+  }, [isFormValid])
 
   // Auto-save functionality
   useEffect(() => {
@@ -270,9 +512,10 @@ export default function TravelAlonePage() {
   const calculateEstimatedCost = useCallback(() => {
     if (!dateRange?.from || !dateRange?.to) return null
 
-    const daysOfTrip = dateRange?.to instanceof Date && dateRange?.from instanceof Date
-      ? Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24))
-      : 0
+    const daysOfTrip =
+      dateRange?.to instanceof Date && dateRange?.from instanceof Date
+        ? Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24))
+        : 0
 
     const basePerDay =
       {
@@ -318,7 +561,6 @@ export default function TravelAlonePage() {
       })
     } catch {
       toast({
-        
         description: "Failed to add destination. Please try again.",
         variant: "destructive",
       })
@@ -374,7 +616,7 @@ export default function TravelAlonePage() {
       })
       return
     }
-  
+
     setIsSubmitting(true)
     try {
       // Create the travel plan object
@@ -392,33 +634,30 @@ export default function TravelAlonePage() {
         transportationMode,
         dietaryRestrictions,
         accessibility,
-        
       }
-  
+
       // Get existing registrations
       const existingRegistrations = localStorage.getItem("travelRegistrations")
       const registrations = existingRegistrations ? JSON.parse(existingRegistrations) : []
-  
+
       // Add new registration
       registrations.push(travelPlan)
-  
+
       // Save to localStorage
       localStorage.setItem("travelRegistrations", JSON.stringify(registrations))
-      
+
       // Remove draft if exists
       localStorage.removeItem("travelPlanDraft")
-  
+
       toast({
         title: "Success",
         description: "Your travel plan has been submitted successfully!",
       })
-      
+
+      // Store the plan and show result modal instead of redirecting
+      setCurrentTravelPlan(travelPlan)
+      setShowResultModal(true)
       setHasUnsavedChanges(false)
-  
-      // Redirect to registrations page
-      setTimeout(() => {
-        router.push("/client/travel-alone/bookings")
-      }, 1500)
     } catch (_error) {
       toast({
         description: "Failed to submit travel plan. Please try again.",
@@ -428,6 +667,13 @@ export default function TravelAlonePage() {
       setIsSubmitting(false)
     }
   }
+
+  // Handle proceeding to bookings page
+  const handleProceedToBookings = () => {
+    setShowResultModal(false)
+    router.push("/client/travel-alone/bookings")
+  }
+
   // Load saved draft with proper error handling
   useEffect(() => {
     try {
@@ -627,15 +873,9 @@ export default function TravelAlonePage() {
             {/* Travel Dates */}
             <div className="space-y-3">
               <Label htmlFor="date-range" className="text-lg">Travel Dates</Label>
-              <DatePickerWithRange
-                date={dateRange}
-                setDate={setDateRange}
-              />
-              {formErrors.dateRange && (
-                <p className="text-sm text-destructive">{formErrors.dateRange}</p>
-              )}
+              <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+              {formErrors.dateRange && <p className="text-sm text-destructive">{formErrors.dateRange}</p>}
             </div>
-
 
             {/* Number of Travelers */}
             <div className="space-y-3">
@@ -857,6 +1097,17 @@ export default function TravelAlonePage() {
         </Card>
       </motion.div>
 
+      {/* Result Modal */}
+      {currentTravelPlan && (
+        <TravelPlanResult
+          isOpen={showResultModal}
+          onClose={() => setShowResultModal(false)}
+          travelPlan={currentTravelPlan}
+          estimatedCost={estimatedCost}
+          onProceed={handleProceedToBookings}
+        />
+      )}
+
       {/* CTA Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -875,4 +1126,3 @@ export default function TravelAlonePage() {
     </div>
   )
 }
-

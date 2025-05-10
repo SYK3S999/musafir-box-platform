@@ -98,7 +98,7 @@ const Header = () => {
             
           <Image 
             src="/Musafer.png" 
-            alt="MusafirBox Logo" 
+            alt="musaferBox Logo" 
             width={100} 
             height={30} 
             className="w-24 sm:w-20 h-auto !block" // Force visibility
@@ -246,7 +246,7 @@ const MobileNav = ({ navItems }: { navItems: { name: string; path: string; icon:
         <Link href="/" className="mr-4 sm:mr-8 flex items-center space-x-2 relative group">
           <Image 
             src="/Musafer.png" 
-            alt="MusafirBox Logo" 
+            alt="musaferBox Logo" 
             width={120} 
             height={40} 
             className="w-24 sm:w-32" 

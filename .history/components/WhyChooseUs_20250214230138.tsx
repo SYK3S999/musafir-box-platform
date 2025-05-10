@@ -34,7 +34,7 @@ export function WhyChooseUs() {
               className="mb-12 text-center"
             >
               <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                Why MusafirBox Stands Out
+                Why musaferBox Stands Out
               </h2>
               
             </motion.div>

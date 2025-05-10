@@ -116,7 +116,7 @@ function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
   );
 }
 
-// Modal for Booking Login Prompt
+// New Modal for Booking Login Prompt
 function BookingLoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const router = useRouter();
   return (
@@ -137,7 +137,7 @@ function BookingLoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   );
 }
 
-// Modal for Non-Client Permission
+// New Modal for Non-Client Permission
 function PermissionModal({ isOpen, onClose, role }: { isOpen: boolean; onClose: () => void; role: string | null }) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -291,120 +291,6 @@ function OfferCard({
     </motion.div>
   );
 }
-
-// Updated RecommendedOffers Component
-function RecommendedOffers({
-  wishlist,
-  onBookNow,
-  onToggleWishlist,
-  user
-}: {
-  wishlist: Offer[]
-  onBookNow: (offer: Offer) => void
-  onToggleWishlist: (offer: Offer) => void
-  user: any
-}) {
-  // Determine preferred categories from wishlist, fallback to popular categories
-  const preferredCategories = useMemo(() => {
-    const wishlistCategories = Array.from(new Set(wishlist.map(offer => offer.category)));
-    return wishlistCategories.length > 0 ? wishlistCategories : ["beach", "city"];
-  }, [wishlist]);
-
-  // Filter recommended offers with fallback to ensure offers are always shown
-  const recommendedOffers = useMemo(() => {
-    // Step 1: Try preferred categories, non-wishlisted, within price range
-    let recs = offers
-      .filter(offer => 
-        !wishlist.some(w => w.id === offer.id) && // Exclude wishlisted
-        preferredCategories.includes(offer.category) && // Match preferred categories
-        offer.price >= 1000 && offer.price <= 2500 // Price range
-      )
-      .slice(0, 3); // Limit to 3
-
-    // Step 2: If fewer than 3 offers, add non-wishlisted offers from any category
-    if (recs.length < 3) {
-      const additional = offers
-        .filter(offer => 
-          !wishlist.some(w => w.id === offer.id) && // Non-wishlisted
-          !recs.some(r => r.id === offer.id) && // Not already included
-          offer.price >= 1000 && offer.price <= 2500 // Price range
-        )
-        .slice(0, 3 - recs.length); // Fill up to 3
-      recs = [...recs, ...additional];
-    }
-
-    // Step 3: If still fewer than 3, relax price range
-    if (recs.length < 3) {
-      const more = offers
-        .filter(offer => 
-          !wishlist.some(w => w.id === offer.id) && // Non-wishlisted
-          !recs.some(r => r.id === offer.id) // Not already included
-        )
-        .slice(0, 3 - recs.length); // Fill up to 3
-      recs = [...recs, ...more];
-    }
-
-    return recs.slice(0, 3); // Ensure max 3 offers
-  }, [wishlist, preferredCategories]);
-
-  if (recommendedOffers.length === 0) return null;
-
-  return (
-    <motion.section
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      viewport={{ once: true, amount: 0.2 }}
-      className="relative py-20"
-    >
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-30" />
-      </div>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          className="relative mb-8"
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          <h2 className="text-3xl md:text-5xl font-bold text-center">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/90 to-primary/80">
-              Recommended for You
-            </span>
-          </h2>
-          <div className="absolute -z-10 inset-0 blur-3xl bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 opacity-50" />
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-        >
-          {recommendedOffers.map((offer) => {
-            const CategoryIcon = categoryIcons[offer.category as keyof typeof categoryIcons] || MapPin;
-            const isWishlisted = wishlist.some(item => item.id === offer.id);
-            return (
-              <OfferCard
-                key={offer.id}
-                offer={offer}
-                CategoryIcon={CategoryIcon}
-                onBookNow={onBookNow}
-                onToggleWishlist={onToggleWishlist}
-                isWishlisted={isWishlisted}
-                user={user}
-              />
-            );
-          })}
-        </motion.div>
-      </div>
-    </motion.section>
-  );
-}
-
-// Separator Component (reused from Home.tsx)
-const SectionSeparator = () => (
-  <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-);
 
 function OffersContent() {
   const { user } = useAuth();
@@ -674,19 +560,6 @@ function OffersContent() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Recommended Offers Section for Logged-In Clients */}
-      {user && user.role === "client" && (
-        <>
-          <SectionSeparator />
-          <RecommendedOffers
-            wishlist={wishlist}
-            onBookNow={handleBookNow}
-            onToggleWishlist={handleToggleWishlist}
-            user={user}
-          />
-        </>
-      )}
     </div>
   );
 }

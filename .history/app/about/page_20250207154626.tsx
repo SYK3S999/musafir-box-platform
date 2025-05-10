@@ -66,7 +66,7 @@ export default function AboutPage() {
               </motion.div>
               
               <CardTitle className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
-                About MusafirBox
+                About musaferBox
               </CardTitle>
               <CardDescription className="text-base mt-2">
                 Your ultimate travel companion for unforgettable experiences
@@ -79,7 +79,7 @@ export default function AboutPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-gray-600"
               >
-                MusafirBox is your ultimate travel companion, connecting you with top travel agencies and unforgettable
+                musaferBox is your ultimate travel companion, connecting you with top travel agencies and unforgettable
                 experiences around the world. Our mission is to make travel planning easy, enjoyable, and accessible to
                 everyone.
               </motion.p>

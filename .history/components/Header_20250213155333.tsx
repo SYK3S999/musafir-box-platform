@@ -104,7 +104,7 @@ const Header = () => {
             >
               <Image 
                 src="/Musafer.png" 
-                alt="MusafirBox Logo" 
+                alt="musaferBox Logo" 
                 width={100} 
                 height={30} 
                 className="w-24 sm:w-20 h-auto transition-opacity duration-300 group-hover:opacity-90" 
@@ -294,7 +294,7 @@ const MobileNav = ({ navItems }: { navItems: { name: string; path: string; icon:
           >
             <Image 
               src="/Musafer.png" 
-              alt="MusafirBox Logo" 
+              alt="musaferBox Logo" 
               width={120} 
               height={40} 
               className="w-24 sm:w-32 transition-opacity duration-300 group-hover:opacity-90" 

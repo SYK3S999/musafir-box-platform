@@ -80,7 +80,7 @@ export default function Home() {
         <SectionSeparator />
 
         <SectionWrapper >
-          <SectionTitle>Why MusafirBox Stands Out</SectionTitle>
+          <SectionTitle>Why musaferBox Stands Out</SectionTitle>
           <WhyChooseUs />
         </SectionWrapper>
 

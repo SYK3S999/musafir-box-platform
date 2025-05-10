@@ -8,7 +8,7 @@ export default function PrivacyPage() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <h1 className="text-4xl font-bold mb-6">Privacy Policy</h1>
         <p className="text-lg mb-6">
-          At MusafirBox, we are committed to protecting your privacy and ensuring the security of your personal
+          At musaferBox, we are committed to protecting your privacy and ensuring the security of your personal
           information. This Privacy Policy outlines how we collect, use, and safeguard your data.
         </p>
         <h2 className="text-2xl font-bold mb-4">1. Information We Collect</h2>
@@ -44,7 +44,7 @@ export default function PrivacyPage() {
           Privacy Policy on this page and updating the "Last Updated" date.
         </p>
         <p className="text-lg">
-          If you have any questions about this Privacy Policy, please contact us at privacy@MusafirBox.com.
+          If you have any questions about this Privacy Policy, please contact us at privacy@musaferBox.com.
         </p>
       </motion.div>
     </div>

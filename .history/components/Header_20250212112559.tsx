@@ -97,7 +97,7 @@ const Header = () => {
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
-              MusafirBox
+              musaferBox
             </motion.span>
           </Link>
           <nav className="hidden md:flex items-center space-x-1">
@@ -237,7 +237,7 @@ const MobileNav = ({ navItems }: { navItems: { name: string; path: string; icon:
         <Link href="/" className="flex items-center space-x-2">
           <img 
         src="../public/Musafer_logo.png" 
-        alt="MusafirBox Logo" 
+        alt="musaferBox Logo" 
         className="h-8 w-auto"
           />
         </Link>

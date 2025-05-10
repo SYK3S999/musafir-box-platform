@@ -80,7 +80,7 @@ export default function Home() {
         <SectionSeparator />
 
         <SectionWrapper className="bg-gradient-to-l from-background via-primary/5 to-background">
-          <SectionTitle>Why MusafirBox Stands Out</SectionTitle>
+          <SectionTitle>Why musaferBox Stands Out</SectionTitle>
           <WhyChooseUs />
         </SectionWrapper>
 

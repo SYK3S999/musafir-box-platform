@@ -34,7 +34,7 @@ export function WhyChooseUs() {
         transition={{ duration: 0.5 }}
         viewport={{ once: true, amount: 0.2 }}
       >
-        Why MusafirBox Stands Out
+        Why musaferBox Stands Out
       </motion.h2>
       <motion.div
         className="grid grid-cols-1 md:grid-cols-3 gap-8"
