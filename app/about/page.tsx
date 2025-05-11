@@ -96,7 +96,7 @@ export default function AboutPage() {
                 transition={{ delay: 0.1 }}
                 className="text-gray-600"
               >
-                Founded in 2023, we&apos;ve quickly grown to become a trusted platform for both travelers and travel agencies. We
+                Founded in 2025, we&apos;ve quickly grown to become a trusted platform for both travelers and travel agencies. We
                 believe that every journey has the potential to be life-changing, and we&apos;re here to help you make those dreams
                 a reality.
               </motion.p>
