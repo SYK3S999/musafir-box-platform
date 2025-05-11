@@ -54,7 +54,7 @@ export default function BookingsPage() {
         <div className="container mx-auto px-4 py-12 max-w-6xl">
           <div className="text-center mb-12 space-y-4">
             <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-              Your Bookings
+              Travel Plans
             </h1>
             <div className="flex items-center justify-center gap-3">
               <Package className="w-5 h-5 text-primary" />
