@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { format } from "date-fns"
+import { format, isValid } from "date-fns"
 import { 
   Pencil, 
   Trash2, 
@@ -23,7 +23,6 @@ import {
   Clock, 
   Activity, 
   MapPin,
-  AlertTriangle,
   Hotel,
   Car
 } from "lucide-react"
@@ -44,8 +43,8 @@ interface TravelPlan {
   id: string
   destinations: string[]
   dateRange: {
-    from: string
-    to: string
+    from: string | Date
+    to: string | Date
   }
   travelers: number
   notes: string
@@ -54,11 +53,11 @@ interface TravelPlan {
   accommodation: {
     type: string
     amenities: string[]
-    maxPrice: number
+    maxPrice: number // In DA
   }
   budget: {
-    total: number
-    currency: string
+    total: number // In DA
+    currency: "DA" // Fixed to DA
     flexibility: number
   }
   activities: string[]
@@ -70,6 +69,11 @@ interface TravelPlan {
     mobilityAssistance: boolean
   }
   createdAt: string
+}
+
+// Utility to format price in DA
+const formatPrice = (price: number): string => {
+  return `DA ${price.toLocaleString()}`
 }
 
 export default function TravelRegistrationsPage() {
@@ -92,7 +96,26 @@ export default function TravelRegistrationsPage() {
     try {
       const savedRegistrations = localStorage.getItem("travelRegistrations")
       if (savedRegistrations) {
-        setRegistrations(JSON.parse(savedRegistrations))
+        const parsedRegistrations = JSON.parse(savedRegistrations).map((plan: TravelPlan) => ({
+          ...plan,
+          // Ensure createdAt exists, default to now if missing
+          createdAt: plan.createdAt || new Date().toISOString(),
+          // Normalize dateRange to handle Date objects from TravelAlonePage
+          dateRange: {
+            from: plan.dateRange.from instanceof Date 
+              ? plan.dateRange.from.toISOString() 
+              : plan.dateRange.from,
+            to: plan.dateRange.to instanceof Date 
+              ? plan.dateRange.to.toISOString() 
+              : plan.dateRange.to,
+          },
+          // Ensure currency is DA for backward compatibility
+          budget: {
+            ...plan.budget,
+            currency: "DA",
+          }
+        }))
+        setRegistrations(parsedRegistrations)
       }
     } catch (error) {
       toast({
@@ -117,7 +140,7 @@ export default function TravelRegistrationsPage() {
         )
       case 'destination':
         return [...registrations].sort((a, b) => 
-          a.destinations[0].localeCompare(b.destinations[0])
+          a.destinations[0]?.localeCompare(b.destinations[0] || '') || 0
         )
       default:
         return registrations
@@ -135,7 +158,7 @@ export default function TravelRegistrationsPage() {
   }
 
   const handleEdit = (id: string) => {
-    router.push(`/travel-alone?edit=${id}`)
+    router.push(`/client/travel-alone?edit=${id}`)
   }
 
   const initiateDelete = (id: string) => {
@@ -192,6 +215,13 @@ export default function TravelRegistrationsPage() {
     }
   }
 
+  // Helper to safely format dates
+  const safeFormatDate = (date: string | Date | undefined, fallback: string = "N/A"): string => {
+    if (!date) return fallback
+    const parsedDate = new Date(date)
+    return isValid(parsedDate) ? format(parsedDate, "PPP") : fallback
+  }
+
   const filteredAndSortedRegistrations = filterRegistrations(handleSort(registrations))
 
   return (
@@ -199,7 +229,7 @@ export default function TravelRegistrationsPage() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
-            your custom travel plans
+            Your Custom Travel Plans
           </h1>
           <p className="text-muted-foreground text-xl">
             Your journey begins here
@@ -305,12 +335,12 @@ export default function TravelRegistrationsPage() {
                   <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                     <div className="space-y-4">
                       <h3 className="text-2xl font-semibold text-primary">
-                        {plan.destinations.join(", ")}
+                        {plan.destinations.join(", ") || "Unnamed Destination"}
                       </h3>
                       <div className="flex flex-wrap gap-6 text-muted-foreground">
                         <div className="flex items-center">
                           <Calendar className="h-4 w-4 mr-2 text-primary" />
-                          {format(new Date(plan.dateRange.from), "MMM d")} - {format(new Date(plan.dateRange.to), "MMM d, yyyy")}
+                          {safeFormatDate(plan.dateRange.from, "N/A")} - {safeFormatDate(plan.dateRange.to, "N/A")}
                         </div>
                         <div className="flex items-center">
                           <Users className="h-4 w-4 mr-2 text-primary" />
@@ -377,10 +407,10 @@ export default function TravelRegistrationsPage() {
             <DialogContent className="max-w-3xl bg-background/95 backdrop-blur-sm">
               <DialogHeader>
                 <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
-                  {selectedPlan.destinations.join(", ")}
+                  {selectedPlan.destinations.join(", ") || "Unnamed Destination"}
                 </DialogTitle>
                 <DialogDescription className="text-muted-foreground text-base">
-                  Created on {format(new Date(selectedPlan.createdAt), "PPP")}
+                  Created on {safeFormatDate(selectedPlan.createdAt, "Unknown")}
                 </DialogDescription>
               </DialogHeader>
               
@@ -391,14 +421,14 @@ export default function TravelRegistrationsPage() {
                     <div className="space-y-4">
                       <div className="flex items-center text-muted-foreground">
                         <Calendar className="h-5 w-5 mr-3 text-primary" />
-                        <span>{format(new Date(selectedPlan.dateRange.from), "PPP")} - {format(new Date(selectedPlan.dateRange.to), "PPP")}</span>
+                        <span>{safeFormatDate(selectedPlan.dateRange.from, "N/A")} - {safeFormatDate(selectedPlan.dateRange.to, "N/A")}</span>
                       </div>
                       <div className="flex items-center text-muted-foreground">
                         <Users className="h-5 w-5 mr-3 text-primary" />
                         <span>{selectedPlan.travelers} Travelers</span>
                       </div>
                       <div className="flex items-center text-muted-foreground">
-                      <MapPin className="h-5 w-5 mr-3 text-primary" />
+                        <MapPin className="h-5 w-5 mr-3 text-primary" />
                         <span>{selectedPlan.travelStyle}</span>
                       </div>
                     </div>
@@ -414,7 +444,7 @@ export default function TravelRegistrationsPage() {
                         <span>{selectedPlan.accommodation.type}</span>
                       </div>
                       <div className="text-xl font-semibold text-primary">
-                        Up to {selectedPlan.budget.currency} {selectedPlan.accommodation.maxPrice.toLocaleString()}
+                        Up to {formatPrice(selectedPlan.accommodation.maxPrice)}
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {selectedPlan.accommodation.amenities.map((amenity, index) => (
@@ -457,7 +487,7 @@ export default function TravelRegistrationsPage() {
                     <h3 className="font-semibold text-lg">Budget Details</h3>
                     <div className="space-y-4">
                       <div className="text-3xl font-bold text-primary">
-                        {selectedPlan.budget.currency} {selectedPlan.budget.total.toLocaleString()}
+                        {formatPrice(selectedPlan.budget.total)}
                       </div>
                       <div className="flex items-center text-muted-foreground">
                         <Clock className="h-5 w-5 mr-3 text-primary" />

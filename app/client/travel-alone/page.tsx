@@ -41,13 +41,13 @@ import { useRouter } from "next/navigation"
 interface AccommodationPreferences {
   type: string
   amenities: string[]
-  maxPrice: number
+  maxPrice: number // Per night, in DA
 }
 
 interface BudgetPreferences {
-  total: number
-  currency: string
-  flexibility: number
+  total: number // Total trip budget, in DA
+  currency: "DA" // Fixed to DA
+  flexibility: number // Percentage
 }
 
 interface AccessibilityNeeds {
@@ -70,6 +70,7 @@ interface TravelPlan {
   transportationMode: string[]
   dietaryRestrictions: string[]
   accessibility: AccessibilityNeeds
+  createdAt: string // Added for consistency with TravelRegistrationsPage
 }
 
 // Move constants outside component to prevent recreating on each render
@@ -136,8 +137,6 @@ const TRANSPORTATION_MODES = [
   "Bike Rental",
 ] as const
 
-const CURRENCIES = ["USD", "EUR"] as const
-
 const ACTIVITIES = [
   "Sightseeing",
   "Adventure Sports",
@@ -149,19 +148,37 @@ const ACTIVITIES = [
   "Historical Sites",
 ] as const
 
-// Exchange rates (static for simplicity, as of May 2025)
-const EXCHANGE_RATES = {
-  DA: 1, // 1 DA = 1 DA
-  USD: 135, // 1 USD = 135 DA
-  EUR: 145, // 1 EUR = 145 DA
-  
+// Realistic accommodation price ranges per night (in DA)
+const ACCOMMODATION_PRICE_RANGES = {
+  Hotel: { min: 10800, max: 40500 }, // $80-$300 × 135
+  Resort: { min: 20250, max: 67500 }, // $150-$500
+  "Vacation Rental": { min: 8100, max: 27000 }, // $60-$200
+  Hostel: { min: 2700, max: 6750 }, // $20-$50
+  "Boutique Hotel": { min: 13500, max: 54000 }, // $100-$400
+  Camping: { min: 1350, max: 4050 }, // $10-$30
+  Homestay: { min: 4050, max: 13500 }, // $30-$100
+} as const
+
+// Base per-day costs by travel style (in DA)
+const BASE_DAILY_COSTS = {
+  Luxury: 40500, // $300 × 135
+  "Budget-friendly": 6750, // $50
+  Adventure: 13500, // $100
+  Cultural: 10800, // $80
+  Relaxation: 20250, // $150
+  Business: 27000, // $200
+  "Family-friendly": 16200, // $120
 } as const
 
 // Add type safety for travel styles
 type TravelStyle = (typeof TRAVEL_STYLES)[number]
-type Currency = (typeof CURRENCIES)[number]
 
-// New TravelPlanResult Component
+// Utility to format price in DA
+const formatPrice = (price: number): string => {
+  return `DA ${price.toLocaleString()}`
+}
+
+// TravelPlanResult Component
 function TravelPlanResult({
   isOpen,
   onClose,
@@ -175,36 +192,47 @@ function TravelPlanResult({
   estimatedCost: number | null
   onProceed: () => void
 }) {
-  // Convert budget and estimated cost to Algerian Dinar (DA)
-  const budgetInDA = travelPlan.budget.total * (EXCHANGE_RATES[travelPlan.budget.currency as Currency] || 135)
-  const estimatedCostInDA = estimatedCost ? estimatedCost * (EXCHANGE_RATES[travelPlan.budget.currency as Currency] || 135) : null
+  // Budget and estimated cost are in DA
+  const budgetInDA = travelPlan.budget.total
+  const estimatedCostInDA = estimatedCost
 
   // Suggest a hotel based on accommodation type and travel style
   const getSuggestedHotel = () => {
     const { type, maxPrice } = travelPlan.accommodation
     const { travelStyle } = travelPlan
     const baseName = travelPlan.destinations[0] ? `${travelPlan.destinations[0]} ` : ""
-    const maxPriceInDA = maxPrice * (EXCHANGE_RATES[travelPlan.budget.currency as Currency] || 135)
+
+    // Get price range in DA, adjust based on travel style
+    const priceRange = ACCOMMODATION_PRICE_RANGES[type as keyof typeof ACCOMMODATION_PRICE_RANGES] || { min: 10800, max: 40500 }
+    let basePriceDA = travelStyle === "Luxury" ? priceRange.max : (priceRange.min + priceRange.max) / 2
+
+    // Cap at maxPrice (in DA)
+    basePriceDA = Math.min(basePriceDA, maxPrice)
+
+    // Ensure minimum realistic price (5000 DA/night)
+    if (basePriceDA < 5000) {
+      basePriceDA = 5000
+    }
 
     switch (type) {
       case "Hotel":
         return travelStyle === "Luxury"
-          ? `${baseName}Grand Palace (5-star, ~${maxPriceInDA.toLocaleString()} DA/night)`
-          : `${baseName}Comfort Inn (3-star, ~${(maxPriceInDA * 0.7).toLocaleString()} DA/night)`
+          ? `${baseName}Grand Palace (5-star, ~${formatPrice(basePriceDA)}/night)`
+          : `${baseName}Comfort Inn (3-star, ~${formatPrice(basePriceDA)}/night)`
       case "Resort":
-        return `${baseName}Beachfront Resort (~${maxPriceInDA.toLocaleString()} DA/night)`
+        return `${baseName}Beachfront Resort (~${formatPrice(basePriceDA)}/night)`
       case "Vacation Rental":
-        return `${baseName}Cozy Apartment (~${(maxPriceInDA * 0.6).toLocaleString()} DA/night)`
+        return `${baseName}Cozy Apartment (~${formatPrice(basePriceDA)}/night)`
       case "Hostel":
-        return `${baseName}Traveler's Hostel (~${(maxPriceInDA * 0.3).toLocaleString()} DA/night)`
+        return `${baseName}Traveler's Hostel (~${formatPrice(basePriceDA)}/night)`
       case "Boutique Hotel":
-        return `${baseName}Chic Boutique (~${(maxPriceInDA * 0.9).toLocaleString()} DA/night)`
+        return `${baseName}Chic Boutique (~${formatPrice(basePriceDA)}/night)`
       case "Camping":
-        return `${baseName}Nature Campsite (~${(maxPriceInDA * 0.2).toLocaleString()} DA/night)`
+        return `${baseName}Nature Campsite (~${formatPrice(basePriceDA)}/night)`
       case "Homestay":
-        return `${baseName}Local Homestay (~${(maxPriceInDA * 0.5).toLocaleString()} DA/night)`
+        return `${baseName}Local Homestay (~${formatPrice(basePriceDA)}/night)`
       default:
-        return "Standard Hotel (~${maxPriceInDA.toLocaleString()} DA/night)"
+        return `${baseName}Standard Hotel (~${formatPrice(basePriceDA)}/night)`
     }
   }
 
@@ -316,7 +344,7 @@ function TravelPlanResult({
               Budget
             </h3>
             <p className="text-muted-foreground">
-              Your budget: {budgetInDA.toLocaleString()} DA (±{travelPlan.budget.flexibility}% flexibility)
+              Your budget: {formatPrice(budgetInDA)} (±{travelPlan.budget.flexibility}% flexibility)
             </p>
           </div>
 
@@ -327,7 +355,7 @@ function TravelPlanResult({
               Estimated Price
             </h3>
             <p className="text-muted-foreground">
-              Approx. {estimatedCostInDA ? estimatedCostInDA.toLocaleString() : "N/A"} DA for {travelPlan.travelers} traveler{travelPlan.travelers > 1 ? "s" : ""}
+              Approx. {estimatedCostInDA ? formatPrice(estimatedCostInDA) : "N/A"} for {travelPlan.travelers} traveler{travelPlan.travelers > 1 ? "s" : ""}
             </p>
           </div>
 
@@ -390,12 +418,12 @@ function TravelPlanResult({
 const DEFAULT_ACCOMMODATION: AccommodationPreferences = {
   type: "Hotel",
   amenities: [],
-  maxPrice: 200,
+  maxPrice: 13500, // 100 USD × 135 = 13,500 DA/night
 }
 
 const DEFAULT_BUDGET: BudgetPreferences = {
-  total: 5000,
-  currency: "DA" as Currency,
+  total: 135000, // 1000 USD × 135 = 135,000 DA
+  currency: "DA",
   flexibility: 20,
 }
 
@@ -429,8 +457,8 @@ export default function TravelAlonePage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [isFormValid, setIsFormValid] = useState(false)
   const [estimatedCost, setEstimatedCost] = useState<number | null>(null)
-  const [showResultModal, setShowResultModal] = useState(false) // New state for result modal
-  const [currentTravelPlan, setCurrentTravelPlan] = useState<TravelPlan | null>(null) // Store submitted plan
+  const [showResultModal, setShowResultModal] = useState(false)
+  const [currentTravelPlan, setCurrentTravelPlan] = useState<TravelPlan | null>(null)
 
   // Loading states
   const [isLoading, setIsLoading] = useState({
@@ -468,12 +496,19 @@ export default function TravelAlonePage() {
       errors.transportation = "Please select at least one transportation mode"
     }
 
-    if (budget.total <= 0) {
-      errors.budget = "Budget must be greater than 0"
+    // Validate budget and accommodation prices (in DA)
+    const minBudgetDA = 67500 * travelers // $500 × 135 = 67,500 DA per traveler
+    if (budget.total < minBudgetDA) {
+      errors.budget = `Budget too low. Minimum ${formatPrice(minBudgetDA)} required for ${travelers} traveler${travelers > 1 ? "s" : ""}`
+    }
+
+    const minAccommodationDA = ACCOMMODATION_PRICE_RANGES[accommodation.type as keyof typeof ACCOMMODATION_PRICE_RANGES]?.min || 2700
+    if (accommodation.maxPrice < minAccommodationDA) {
+      errors.accommodation = `Accommodation price too low. Minimum ${formatPrice(minAccommodationDA)} per night required for ${accommodation.type}`
     }
 
     return errors
-  }, [destinations, dateRange, selectedActivities, transportationMode, budget.total])
+  }, [destinations, dateRange, selectedActivities, transportationMode, budget, accommodation, travelers])
 
   // Update form validation on relevant changes
   useEffect(() => {
@@ -489,7 +524,7 @@ export default function TravelAlonePage() {
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [isFormValid])
+  }, [destinations, dateRange, travelers, notes, travelStyle, accommodation, budget, selectedActivities, transportationMode, dietaryRestrictions, accessibility])
 
   // Auto-save functionality
   useEffect(() => {
@@ -508,7 +543,7 @@ export default function TravelAlonePage() {
     }
   }, [hasUnsavedChanges, isFormValid])
 
-  // Calculate estimated cost
+  // Calculate estimated cost (in DA)
   const calculateEstimatedCost = useCallback(() => {
     if (!dateRange?.from || !dateRange?.to) return null
 
@@ -517,27 +552,34 @@ export default function TravelAlonePage() {
         ? Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24))
         : 0
 
-    const basePerDay =
-      {
-        Luxury: 500,
-        "Budget-friendly": 100,
-        Adventure: 200,
-        Cultural: 150,
-        Relaxation: 300,
-        Business: 400,
-        "Family-friendly": 250,
-      }[travelStyle] || 200
+    // Base daily cost (in DA)
+    const basePerDay = BASE_DAILY_COSTS[travelStyle as keyof typeof BASE_DAILY_COSTS] || 13500
 
-    const accommodationCost = accommodation.maxPrice * daysOfTrip
-    const activitiesCost = selectedActivities.length * 50 * daysOfTrip
-    const transportationCost = transportationMode.includes("Flight") ? 500 : 200
-    const accessibilityCost = Object.values(accessibility).filter(Boolean).length * 100 * daysOfTrip
-
-    return (
-      (basePerDay * daysOfTrip + accommodationCost + activitiesCost + transportationCost + accessibilityCost) *
-      travelers
+    // Accommodation cost (use maxPrice, ensure within realistic range)
+    const accommodationPrice = Math.min(
+      accommodation.maxPrice,
+      ACCOMMODATION_PRICE_RANGES[accommodation.type as keyof typeof ACCOMMODATION_PRICE_RANGES]?.max || 40500
     )
-  }, [dateRange, travelStyle, accommodation.maxPrice, selectedActivities, transportationMode, accessibility, travelers])
+    const accommodationCost = accommodationPrice * daysOfTrip
+
+    // Activities cost (6750 DA per activity per day, equivalent to $50)
+    const activitiesCost = selectedActivities.length * 6750 * daysOfTrip
+
+    // Transportation cost (in DA)
+    const transportationCost = transportationMode.includes("Flight") ? 67500 : transportationMode.length * 13500 // $500 or $100
+
+    // Accessibility cost (13500 DA per need per day, equivalent to $100)
+    const accessibilityCost = Object.values(accessibility).filter(Boolean).length * 13500 * daysOfTrip
+
+    // Total cost per traveler
+    let totalCost = (basePerDay * daysOfTrip + accommodationCost + activitiesCost + transportationCost + accessibilityCost) * travelers
+
+    // Cap at budget with flexibility
+    const budgetWithFlexibility = budget.total * (1 + budget.flexibility / 100)
+    totalCost = Math.min(totalCost, budgetWithFlexibility)
+
+    return Math.round(totalCost)
+  }, [dateRange, travelStyle, accommodation, budget, selectedActivities, transportationMode, accessibility, travelers])
 
   // Update estimated cost when relevant factors change
   useEffect(() => {
@@ -550,9 +592,7 @@ export default function TravelAlonePage() {
 
     setIsLoading((prev) => ({ ...prev, destinations: true }))
     try {
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 500))
-
       setDestinations((prev) => [...prev, newDestination.trim()])
       setNewDestination("")
       toast({
@@ -588,6 +628,7 @@ export default function TravelAlonePage() {
         transportationMode,
         dietaryRestrictions,
         accessibility,
+        createdAt: new Date().toISOString(),
       }
 
       await new Promise((resolve) => setTimeout(resolve, 1000))
@@ -619,7 +660,6 @@ export default function TravelAlonePage() {
 
     setIsSubmitting(true)
     try {
-      // Create the travel plan object
       const travelPlan: TravelPlan = {
         id: Date.now().toString(),
         destinations,
@@ -634,19 +674,13 @@ export default function TravelAlonePage() {
         transportationMode,
         dietaryRestrictions,
         accessibility,
+        createdAt: new Date().toISOString(),
       }
 
-      // Get existing registrations
       const existingRegistrations = localStorage.getItem("travelRegistrations")
       const registrations = existingRegistrations ? JSON.parse(existingRegistrations) : []
-
-      // Add new registration
       registrations.push(travelPlan)
-
-      // Save to localStorage
       localStorage.setItem("travelRegistrations", JSON.stringify(registrations))
-
-      // Remove draft if exists
       localStorage.removeItem("travelPlanDraft")
 
       toast({
@@ -654,7 +688,6 @@ export default function TravelAlonePage() {
         description: "Your travel plan has been submitted successfully!",
       })
 
-      // Store the plan and show result modal instead of redirecting
       setCurrentTravelPlan(travelPlan)
       setShowResultModal(true)
       setHasUnsavedChanges(false)
@@ -668,13 +701,12 @@ export default function TravelAlonePage() {
     }
   }
 
-  // Handle proceeding to bookings page
   const handleProceedToBookings = () => {
     setShowResultModal(false)
     router.push("/client/travel-alone/bookings")
   }
 
-  // Load saved draft with proper error handling
+  // Load saved draft
   useEffect(() => {
     try {
       const savedDraft = localStorage.getItem("travelPlanDraft")
@@ -691,6 +723,7 @@ export default function TravelAlonePage() {
         setTransportationMode(draft.transportationMode || [])
         setDietaryRestrictions(draft.dietaryRestrictions || [])
         setAccessibility(draft.accessibility || DEFAULT_ACCESSIBILITY)
+        draft.createdAt = draft.createdAt || new Date().toISOString()
       }
     } catch (error) {
       console.error("Error loading draft:", error)
@@ -909,24 +942,42 @@ export default function TravelAlonePage() {
 
             {/* Accommodation Preferences */}
             <div className="space-y-3">
-              <Label htmlFor="accommodation-type" className="text-lg">
-                Accommodation Type
-              </Label>
-              <Select
-                value={accommodation.type}
-                onValueChange={(value) => setAccommodation({ ...accommodation, type: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select accommodation type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ACCOMMODATION_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label className="text-lg">Accommodation Preferences</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="accommodation-type">Type</Label>
+                  <Select
+                    value={accommodation.type}
+                    onValueChange={(value) => setAccommodation({ ...accommodation, type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select accommodation type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ACCOMMODATION_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="accommodation-price">Max Price per Night</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="accommodation-price"
+                      type="number"
+                      value={accommodation.maxPrice}
+                      onChange={(e) => setAccommodation({ ...accommodation, maxPrice: Number.parseInt(e.target.value) })}
+                      min={1000}
+                      step={100}
+                    />
+                    <span className="flex items-center">DA</span>
+                  </div>
+                </div>
+              </div>
+              {formErrors.accommodation && <p className="text-sm text-destructive">{formErrors.accommodation}</p>}
             </div>
 
             {/* Budget Settings */}
@@ -940,24 +991,10 @@ export default function TravelAlonePage() {
                       type="number"
                       value={budget.total}
                       onChange={(e) => setBudget({ ...budget, total: Number.parseInt(e.target.value) })}
-                      min={0}
-                      step={100}
+                      min={10000}
+                      step={1000}
                     />
-                    <Select
-                      value={budget.currency}
-                      onValueChange={(value) => setBudget({ ...budget, currency: value as Currency })}
-                    >
-                      <SelectTrigger className="w-24">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CURRENCIES.map((currency) => (
-                          <SelectItem key={currency} value={currency}>
-                            {currency}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <span className="flex items-center">DA</span>
                   </div>
                 </div>
                 <div>
@@ -970,6 +1007,7 @@ export default function TravelAlonePage() {
                     step={5}
                     className="mt-2"
                   />
+                  <p className="text-sm text-muted-foreground mt-1">{budget.flexibility}%</p>
                 </div>
               </div>
               {formErrors.budget && <p className="text-sm text-destructive">{formErrors.budget}</p>}
@@ -1088,7 +1126,7 @@ export default function TravelAlonePage() {
           <CardContent className="pt-6">
             <p className="text-lg font-medium">Estimated Trip Cost</p>
             <p className="text-3xl font-bold text-primary">
-              {budget.currency} {estimatedCost?.toLocaleString() ?? "N/A"}
+              {estimatedCost ? formatPrice(estimatedCost) : "N/A"}
             </p>
             <p className="text-sm text-muted-foreground">
               Based on your selections and {travelers} traveler{travelers > 1 ? "s" : ""}
